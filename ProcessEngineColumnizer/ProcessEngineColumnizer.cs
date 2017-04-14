@@ -48,35 +48,49 @@ namespace ProcessEngineColumnizer
 
         public string[] SplitLine(ILogLineColumnizerCallback callback, string line)
         {
+            string[] columnContent = new string[CONST_COLUMNCOUNT];
             // fist split line into || sections (the log4net columns)
             string[] log4netSections = line.Split(splitString, 5, StringSplitOptions.None);
 
-            //extract process engine context out of message
-            string wholeMessage = log4netSections[4];
-            // find first [ and next ] -> thats the proc eng context
-            // [RunTimeGuid:966728c2-c4b4; WODE:12dd; WOIN:12a; ActivityInstance:'n/a']
-            int firstBracket = wholeMessage.IndexOf("[");
-            int lastBracket = wholeMessage.IndexOf("]");
+            //in case its a multiline log move whole content to Message column
+            //there wont be 5 sections separated with ||
+            if (log4netSections.Length < 5)
+            {
+                columnContent[0] = "-";
+                columnContent[1] = "-";
+                columnContent[2] = "-";
+                columnContent[3] = "-";
+                columnContent[4] = line;
+            }
+            else
+            {
+                //extract process engine context out of message
+                string wholeMessage = log4netSections[4];
+                // find first [ and next ] -> thats the proc eng context
+                // [RunTimeGuid:966728c2-c4b4; WODE:12dd; WOIN:12a; ActivityInstance:'n/a']
+                int firstBracket = wholeMessage.IndexOf("[");
+                int lastBracket = wholeMessage.IndexOf("]");
 
-            if (firstBracket < 0)
-                firstBracket = -1;
-            if (lastBracket < 0)
-                lastBracket = wholeMessage.Length - 1;
+                if (firstBracket < 0)
+                    firstBracket = -1;
+                if (lastBracket < 0)
+                    lastBracket = wholeMessage.Length - 1;
 
-            string procEngContext = wholeMessage.Substring(firstBracket + 1, lastBracket);
-            string msgNoContext = wholeMessage.Substring(lastBracket + 1).Trim();
+                string procEngContext = wholeMessage.Substring(firstBracket + 1, lastBracket);
+                string msgNoContext = wholeMessage.Substring(lastBracket + 1).Trim();
 
-            if (msgNoContext.StartsWith(":"))
-                msgNoContext = msgNoContext.Substring(1).Trim();
-            if (msgNoContext.StartsWith(":"))
-                msgNoContext = msgNoContext.Substring(1).Trim();
+                if (msgNoContext.StartsWith(":"))
+                    msgNoContext = msgNoContext.Substring(1).Trim();
+                if (msgNoContext.StartsWith(":"))
+                    msgNoContext = msgNoContext.Substring(1).Trim();
 
-            string[] columnContent = new string[CONST_COLUMNCOUNT];
-            columnContent[0] = log4netSections[0];
-            columnContent[1] = log4netSections[1] + log4netSections[2];
-            columnContent[2] = log4netSections[3];
-            columnContent[3] = procEngContext;
-            columnContent[4] = msgNoContext;
+
+                columnContent[0] = log4netSections[0];
+                columnContent[1] = log4netSections[1] + log4netSections[2];
+                columnContent[2] = log4netSections[3];
+                columnContent[3] = procEngContext;
+                columnContent[4] = msgNoContext;
+            }
             return columnContent;
         }
 
@@ -87,7 +101,7 @@ namespace ProcessEngineColumnizer
 
         public string GetDescription()
         {
-            return "attempts to make columsn out of logging context e.g. WOIN, Activity, etc...\r\nuse this log4net pattern:\r\n<conversionPattern value=\" % date{ dd MMM yyyy HH:mm: ss,fff}||[% thread] ||% -5level ||% logger ||% message % newline % exception\"/>";
+            return "attempts to make columsn out of logging context e.g. WOIN, Activity, etc...\r\\r\nuse this log4net pattern:\r\n<conversionPattern value=\" % date{ dd MMM yyyy HH:mm: ss,fff}||[% thread] ||% -5level ||% logger ||% message % newline % exception\"/>";
         }
 
         public string GetName()
