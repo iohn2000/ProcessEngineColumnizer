@@ -1,0 +1,786 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ColumnizerLib</name>
+    </assembly>
+    <members>
+        <member name="T:LogExpert.IColumnizerConfigurator">
+            <summary>
+            A Columnizer can implement this interface if it has to show an own settings dialog to the user.
+            The Config button in LogExpert's columnizer dialog is enabled if a Columnizer implements this interface.
+            If you don't need a config dialog you don't have to implement this interface.
+            </summary>
+        </member>
+        <member name="M:LogExpert.IColumnizerConfigurator.Configure(LogExpert.ILogLineColumnizerCallback,System.String)">
+            <summary>
+            This function is called if the user presses the Config button on the Columnizer dialog.
+            Its up to the Columnizer plugin to show an own configuration dialog and store all
+            required settings.
+            </summary>
+            <param name="callback">Callback interface with functions which can be used by the columnizer</param>
+            <param name="configDir">The complete path to the directory where LogExpert stores its settings. 
+            You can use this directory, if you want to. Please don't use the file name "settings.dat", because this
+            name is used by LogExpert.
+            </param>
+            <remarks>
+            This is the place to show a configuration dialog to the user. You have to handle all dialog stuff by yourself.
+            It's also your own job to store the configuration in a config file or on the registry.
+            The callback is passed to this function just in case you need the file name of the current log file
+            or the line count etc. You can also use it to store different settings for every log file.
+            You can use the callback to distinguish between different files. Its passed to all important 
+            functions in the Columnizer.
+            </remarks>
+        </member>
+        <member name="M:LogExpert.IColumnizerConfigurator.LoadConfig(System.String)">
+            <summary>
+            This function will be called right after LogExpert has loaded your Columnizer class. Use this
+            to load the configuration which was saved in the Configure() function.
+            You have to hold the loaded config data in your Columnizer object.
+            </summary>
+            <param name="configDir">The complete path to the directory where LogExpert stores its settings. 
+            You can use this directory, if you want to. Please don't use the file name "settings.dat", because this
+            name is used by LogExpert.
+            </param>
+        </member>
+        <member name="T:LogExpert.IContextMenuEntry">
+            <summary>
+            Implement this interface to add a menu entry to the context menu of LogExpert. 
+            </summary>
+            <remarks>
+            <para>
+            The methods in this interface will be called in the GUI thread. So make sure that there's no
+            heavyweight work to do in your implementations.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:LogExpert.IContextMenuEntry.GetMenuText(System.Collections.Generic.IList{System.Int32},LogExpert.ILogLineColumnizer,LogExpert.ILogExpertCallback)">
+            <summary>
+            This function is called from LogExpert if the context menu is about to be displayed. 
+            Your implementation can control whether LogExpert will show a menu entry by returning
+            an appropriate value.<br></br>
+            </summary>
+            <param name="lines">A list containing all selected line numbers.</param>
+            <param name="columnizer">The currently selected Columnizer. You can use it to split log lines, 
+                if necessary.</param>
+            <param name="callback">The callback interface implemented by LogExpert. You can use the functions
+                for retrieving log lines or pass it along to functions of the Columnizer if needed.</param>
+            <returns>
+            Return the string which should be displayed in the context menu.<br></br>
+            You can control the menu behaviour by returning the the following values:<br></br>
+              <ul>
+              <li>Normal string:  The string is displayed as a menu entry</li>
+              <li>String starting with underscore: The string is displayed as a disabled menu entry</li>
+              <li>null: No menu entry is displayed.</li>
+              </ul>
+            </returns>
+        </member>
+        <member name="M:LogExpert.IContextMenuEntry.MenuSelected(System.Collections.Generic.IList{System.Int32},LogExpert.ILogLineColumnizer,LogExpert.ILogExpertCallback)">
+            <summary>
+            This function is called from LogExpert if the menu entry is choosen by the user. <br></br>
+            Note that this function is called from the GUI thread. So try to avoid time consuming operations.
+            </summary>
+            <param name="lines">A list containing all selected line numbers.</param>
+            <param name="columnizer">The currently selected Columnizer. You can use it to split log lines, 
+                if necessary.</param>
+            <param name="callback">The callback interface implemented by LogExpert. You can use the functions
+                for retrieving log lines or pass it along to functions of the Columnizer if needed.</param>
+        </member>
+        <member name="T:LogExpert.IFileSystemPlugin">
+            <summary>
+            Interface for file system plugins. A file system plugin is responsible for feeding file data to LogExpert.
+            </summary>
+            <remarks>
+            LogExperts file handling is done via file system plugins. The selection if the appropriate plugin for a file is based 
+            on URI schemes. If a file system plugin returns <code>true</code> to the <see cref="M:LogExpert.IFileSystemPlugin.CanHandleUri(System.String)"/> method, it will be selected
+            to handle a file.
+            </remarks>
+        </member>
+        <member name="M:LogExpert.IFileSystemPlugin.CanHandleUri(System.String)">
+            <summary>
+            Called from LogExpert to determine a file system plugin for a given URI. 
+            </summary>
+            <param name="uriString">The URI of the file to be loaded.</param>
+            <returns>Return <code>true</code> if the file system plugin can handle the URI.</returns>
+        </member>
+        <member name="M:LogExpert.IFileSystemPlugin.GetLogfileInfo(System.String)">
+            <summary>
+            Return a file system specific implementation of <see cref="T:LogExpert.ILogFileInfo"/> here.
+            The method is called from LogExpert when a file is about to be opened. It's called after <see cref="M:LogExpert.IFileSystemPlugin.CanHandleUri(System.String)"/> was called.
+            </summary>
+            <param name="uriString"></param>
+            <returns></returns>
+        </member>
+        <member name="P:LogExpert.IFileSystemPlugin.Text">
+            <summary>
+            Name of the plugin. Will be used in the Settings dialog.
+            </summary>
+        </member>
+        <member name="P:LogExpert.IFileSystemPlugin.Description">
+            <summary>
+            Short description. Currently unused, but maybe used later for displaying a short info about the plugin.
+            </summary>
+        </member>
+        <member name="T:LogExpert.IInitColumnizer">
+            <summary>
+            Implement this interface in your columnizer if you need to do some initialization work 
+            every time the columnizer is selected.
+            </summary>
+            <remarks>
+            <para>
+            The methods in this interface will be called in the GUI thread. So make sure that there's no
+            heavyweight work to do in your implementations.</para>
+            <para>
+            If a file is reloaded, the current Columnizer is set again. That means that the methods of this
+            interface will be called again. Generally you should do no assumptions about how often the 
+            methods will be called. The file is already loaded when the columnizer is set. So
+            you can use the methods in the given callbacks to get informations about the file or to
+            retrieve specific lines.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:LogExpert.IInitColumnizer.Selected(LogExpert.ILogLineColumnizerCallback)">
+            <summary>
+            This method is called when the Columnizer is selected as the current columnizer.
+            </summary>
+            <param name="callback">Callback that can be used to retrieve some informations, if needed.</param>
+        </member>
+        <member name="M:LogExpert.IInitColumnizer.DeSelected(LogExpert.ILogLineColumnizerCallback)">
+            <summary>
+            This method is called when the Columnizer is de-selected (i.e. when another Columnizer is
+            selected).
+            </summary>
+            <param name="callback">Callback that can be used to retrieve some informations, if needed.</param>
+        </member>
+        <member name="T:LogExpert.ILogFileInfo">
+            <summary>
+            Interface which represents a file in LogExpert. 'File' could be anything that represents text data to be displayed in LogExpert.
+            </summary>
+        </member>
+        <member name="M:LogExpert.ILogFileInfo.OpenStream">
+            <summary>
+            Returns a stream for the log file file. The actual type of stream depends on the implementation.
+            The caller (LogExpert) is responsible for closing the stream.
+            </summary>
+            <remarks>
+            The returned Stream must support read and seek. Writing is not needed.
+            </remarks>
+            <returns>A Stream open for reading</returns>
+        </member>
+        <member name="P:LogExpert.ILogFileInfo.FullName">
+            <summary>
+            The file name (complete path) of the log file. This should be a unique name. E.g. an URI or a path on local disk.
+            </summary>
+        </member>
+        <member name="P:LogExpert.ILogFileInfo.FileName">
+            <summary>
+            The file name without path.
+            </summary>
+        </member>
+        <member name="P:LogExpert.ILogFileInfo.DirectoryName">
+            <summary>
+            The directory of the log file. In most cases this is the FullName minus FileName.
+            </summary>
+        </member>
+        <member name="P:LogExpert.ILogFileInfo.DirectorySeparatorChar">
+            <summary>
+            Character used to separate directories in a path string.
+            </summary>
+        </member>
+        <member name="P:LogExpert.ILogFileInfo.Uri">
+            <summary>
+            The URI of the log file.
+            </summary>
+        </member>
+        <member name="P:LogExpert.ILogFileInfo.Length">
+            <summary>
+            Current length of the file. Return -1 if the file is not found.
+            </summary>
+        </member>
+        <member name="P:LogExpert.ILogFileInfo.OriginalLength">
+            <summary>
+            Initial file length at the time the ILogFileInfo instance was created. This is used for the buffer shifting when
+            using the multi file feature. This value should not change after the instance has been created.
+            </summary>
+        </member>
+        <member name="P:LogExpert.ILogFileInfo.FileExists">
+            <summary>
+            Whether the file exists.
+            </summary>
+        </member>
+        <member name="P:LogExpert.ILogFileInfo.PollInterval">
+            <summary>
+            The interval (in ms) LogExpert should check for file changes. The property is checked by LogExpert repeatedly in the loop which
+            checks for file changes. So you can adjust the poll interval as needed. E.g. you can lower the interval when many changes occur and
+            raise the interval when the file has not been changed for a certain amount of time.
+            </summary>
+        </member>
+        <member name="M:LogExpert.ILogFileInfo.FileHasChanged">
+            <summary>
+            Return <code>true</code> if the file has been changed since the last call to this method.
+            </summary>
+            <remarks>
+            LogExpert will poll this method with the interval returned from PollInterval.
+            </remarks>
+        </member>
+        <member name="T:LogExpert.IPreProcessColumnizer">
+            <summary>
+            <para>
+            Implement this interface in your columnizer if you want to pre-process every line
+            directly when it's loaded from file system.</para>
+            <para>
+            You can also use this to drop lines.
+            </para>
+            </summary>
+            <remarks>
+            <para>
+            By implementing this interface with your Columnizer you get the ability to modify the
+            content of a log file right before it will be seen by LogExpert.
+            </para>
+            <para>
+            Note that the <see cref="M:LogExpert.IPreProcessColumnizer.PreProcessLine(System.String,System.Int32,System.Int32)"/>
+            method is only used when loading a line from disk. Because of internal buffering a log line may
+            be read only once or multiple times. You have to ensure that the behaviour is consistent 
+            for every call to <see cref="M:LogExpert.IPreProcessColumnizer.PreProcessLine(System.String,System.Int32,System.Int32)"/> for a specific line. That's especially true
+            when dropping lines. Dropping a line changes the line count seen by LogExpert. That has implications
+            for things like bookmarks etc.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:LogExpert.IPreProcessColumnizer.PreProcessLine(System.String,System.Int32,System.Int32)">
+            <summary>
+            This function is called for every line read from the log file. You can change the content
+            by returning a different string. You can also drop the complete line by returning null.
+            </summary>
+            <param name="logLine">Line content</param>
+            <param name="lineNum">Line number as seen by LogExpert</param>
+            <param name="realLineNum">Actual line number in the file</param>
+            <returns>The changed content or null to drop the line</returns>
+            <remarks>
+            <para>
+            The values of lineNum and realLineNum differ only if you drop lines (by returning null).
+            When you drop a line, this line is hidden completely from LogExpert's log buffers. No chance
+            to bring it back later. When you drop a line, the lineNum will stay the same for the next
+            method call (for the next line). But realLineNum will increase for every call.
+            </para>
+            <para>
+            A usage example is the CsvColumnizer: If configuration says that there are field names
+            in the first line if the CSV file, the CsvColumnizer will store the first line for later
+            field name retrieval. But then the line is dropped. So the line isn't seen by LogExpert.
+            Detecting the first line in the file is only possible by checking the realLineNum parameter.
+            </para>
+            <para>
+            Remember that the <see cref="M:LogExpert.IPreProcessColumnizer.PreProcessLine(System.String,System.Int32,System.Int32)"/> method is called in an early state 
+            when loading the file. So the file isn't loaded completely and the internal state 
+            of LogExpert isn't complete. You cannot make any assumptions about file size or other
+            things. The given parameters are the only 'stateful' informations you can rely on.
+            </para>
+            </remarks>
+        </member>
+        <member name="T:LogExpert.IKeywordAction">
+            <summary>
+            Implement this interface to execute a self defined action when LogExpert detects a 
+            keyword on incomig log file content.
+            These kind of plugins can be used in the "Highlight and Action Triggers" dialog.
+            </summary>
+        </member>
+        <member name="M:LogExpert.IKeywordAction.Execute(System.String,System.String,LogExpert.ILogExpertCallback,LogExpert.ILogLineColumnizer)">
+            <summary>
+            Is called when LogExpert detects a keyword match which is configured for this plugin.
+            The keywords are configured in the Highlight dialog.
+            You have to implement this method to execute your desired actions.
+            </summary>
+            <param name="keyword">The keyword which triggered the call.</param>
+            <param name="param">The parameter configured for the plugin launch (in the Highlight dialog).</param>
+            <param name="callback">A callback which can be used by the plugin.</param>
+            <param name="columnizer">The current columnizer. Can be used to obtain timestamps 
+            (if supported by Columnizer) or to split the log line into fields.</param>
+            <remarks>
+            This method is called in a background thread from the process' thread pool (using BeginInvoke()). 
+            So you cannot rely on state information retrieved by the given callback. E.g. the line count
+            may change during the execution of the method. The only exception from this rule is the current line number
+            retrieved from the callback. This is of course the line number of the line that has triggered
+            the keyword match.
+            </remarks>
+        </member>
+        <member name="M:LogExpert.IKeywordAction.GetName">
+            <summary>
+            Return the name of your plugin here. The returned name is used for displaying the plugin list 
+            in the settings.
+            </summary>
+            <returns>The name of the plugin.</returns>
+        </member>
+        <member name="M:LogExpert.IKeywordAction.GetDescription">
+            <summary>
+            Return a description of your plugin here. E.g. a short explanation of parameters. The descriptions
+            will be displayed in the plugin chooser dialog which is used by the Highlight settings.
+            </summary>
+            <returns>The description of the plugin.</returns>
+        </member>
+        <member name="T:LogExpert.ILogExpertPlugin">
+            <summary>
+            Implement this interface to get notified of various global events in LogExpert.
+            The interface can be implemented by all currently known type of LogExpert plugins (Columnizers,
+            keyword plugins, context menu plugins).
+            </summary>
+        </member>
+        <member name="M:LogExpert.ILogExpertPlugin.AppExiting">
+            <summary>
+            Called on application exit. May be used for cleanup purposes,
+            </summary>
+        </member>
+        <member name="M:LogExpert.ILogExpertPlugin.PluginLoaded">
+            <summary>
+            Called when the plugin is loaded at plugin registration while LogExpert startup.
+            </summary>
+        </member>
+        <member name="T:LogExpert.ILogExpertPluginConfigurator">
+            <summary>
+            If your context menu plugin or keyword action plugin has some configuration it should 
+            implement this interface.
+            When your plugin has implemented this interface, it will get notified if it has to
+            show a config dialog and to save/load config data.<br></br>
+            Like in the IColumnizerConfigurator, you have to do all the saving and loading stuff
+            by yourself.
+            </summary>
+        </member>
+        <member name="M:LogExpert.ILogExpertPluginConfigurator.HasEmbeddedForm">
+            <summary>
+            Return whether your plugin will provide an embedded config dialog or wants to provide
+            a 'popup' dialog for the configuration.<br></br><br></br>
+            'Embedded' means that the dialog is shown directly in the Settings dialog of LogExpert on the
+            right pane of the plugin config tab.
+            </summary>
+            <returns>Return true if your plugin config dialog should be displayed embedded.</returns>
+        </member>
+        <member name="M:LogExpert.ILogExpertPluginConfigurator.StartConfig">
+            <summary>
+            This function is called when LogExpert fills the list of plugins in the Settings dialog.
+            This is the right time to create a 'temporary copy' of your current settings. The temporary copy
+            can be used for initializing the config dialogs.
+            </summary>
+        </member>
+        <member name="M:LogExpert.ILogExpertPluginConfigurator.ShowConfigForm(System.Windows.Forms.Panel)">
+            <summary>
+            Implement this function if your plugins uses an embedded config dialog.
+            This function is called when the user selects the plugin in the list of the Settings dialog
+            and the plugin uses an embedded dialog.<br></br><br></br>
+            You have to create a non-toplevel dialog and set the given parentPanel as the parent of your 
+            dialog. Then make your dialog visible (using Show()).
+            You don't need an OK or Cancel button. Changes made in the dialog should be retrieved
+            to a temporary config every time the <see cref="M:LogExpert.ILogExpertPluginConfigurator.HideConfigForm"/> function is called.
+            The temporary config should be permanently stored when the <see cref="M:LogExpert.ILogExpertPluginConfigurator.SaveConfig(System.String)"/> function
+            is called.
+            </summary>
+            <seealso cref="M:LogExpert.ILogExpertPluginConfigurator.HasEmbeddedForm"/>
+            <param name="parentPanel">Set this panel as the parent for you config dialog.</param>
+        </member>
+        <member name="M:LogExpert.ILogExpertPluginConfigurator.ShowConfigDialog(System.Windows.Forms.Form)">
+            <summary>
+            Implement this function if your plugin uses an own top level dialog for the configuration (modal config dialog).
+            This function is called if the user clicks on the 'Config' button on the plugin settings.
+            <br></br><br></br>
+            You have to create a top level dialog and set the given Form as the owner. Then show
+            the dialog as a modal window (Form.ShowDialog()). Changes made in the dialog should be retrieved
+            after Form.ShowDialog() returns and then put to the temporary copy of your config.
+            The temporary copy config should be permanently stored when the <see cref="M:LogExpert.ILogExpertPluginConfigurator.SaveConfig(System.String)"/> function
+            is called.
+            </summary>
+            <seealso cref="M:LogExpert.ILogExpertPluginConfigurator.HasEmbeddedForm"/>
+            <param name="owner">Set the given Form as the owner of your dialog.</param>
+        </member>
+        <member name="M:LogExpert.ILogExpertPluginConfigurator.HideConfigForm">
+            <summary>
+            This function is called when the user selects another plugin in the list. You should retrieve
+            the changes made in the config dialog to a temporary copy of the config and destroy your dialog.
+            Don't make the changes permanent here, because the user may click the cancel button of LogExpert's 
+            Settings dialog. In this case he/she would expect the changes to be discarded.<br></br>
+            The right place for making changes permanent is the <see cref="M:LogExpert.ILogExpertPluginConfigurator.SaveConfig(System.String)"/> function.
+            </summary>
+            <remarks>
+            The method is also called when the settings dialog is closed. If the settings dialog is closed
+            by OK button this method is called before the <see cref="M:LogExpert.ILogExpertPluginConfigurator.SaveConfig(System.String)"/> method.
+            </remarks>
+        </member>
+        <member name="M:LogExpert.ILogExpertPluginConfigurator.SaveConfig(System.String)">
+            <summary>
+            Called by LogExpert if the user clicks the OK button in LogExpert's Settings dialog.
+            Save your temporary copy of the config here.
+            </summary>
+            <param name="configDir">The location where LogExpert stores its settings.</param>
+        </member>
+        <member name="M:LogExpert.ILogExpertPluginConfigurator.LoadConfig(System.String)">
+            <summary>
+            This function is called when LogExpert is started and scans the plugin directory.
+            You should load your settings here.
+            </summary>
+            <param name="configDir">The location where LogExpert stores its settings.</param>
+        </member>
+        <member name="T:LogExpert.ILogLineColumnizer">
+            <summary>
+             This interface defines a so-called 'Columnizer' for LogExpert.
+             A columnizer splits a single text line into well defined columns. These columns
+             are used in the data grid view of LogExpert.
+             <br></br><br></br> 
+             Optionally a columnizer can parse the log line to determine the date/time of
+             the log line (assuming that all log lines have a timestamp). This is needed for
+             some of the features of LogExpert (see user documentation for more information).
+             <br></br><br></br>
+             You can implement your own columnizers for your logfile format, if needed.
+            </summary>
+        </member>
+        <member name="M:LogExpert.ILogLineColumnizer.GetName">
+            <summary>
+            Returns the name for the columnizer. This name is used for the columnizer selection dialog.
+            </summary>
+        </member>
+        <member name="M:LogExpert.ILogLineColumnizer.GetDescription">
+            <summary>
+            Returns the description of the columnizer. This text is used in the columnizer selection dialog.
+            </summary>
+        </member>
+        <member name="M:LogExpert.ILogLineColumnizer.GetColumnCount">
+            <summary>
+            Returns the number of columns the columnizer will split lines into. 
+            </summary>
+            <remarks>
+            This value does not include the column for displaying the line number. The line number column 
+            is added by LogExpert and is not handled by columnizers.
+            </remarks>
+        </member>
+        <member name="M:LogExpert.ILogLineColumnizer.GetColumnNames">
+            <summary>
+            Returns the names of the columns. The returned names are used by LogExpert for the column headers in the data grid view.
+            The names are expected in order from left to right. 
+            </summary>
+        </member>
+        <member name="M:LogExpert.ILogLineColumnizer.SplitLine(LogExpert.ILogLineColumnizerCallback,System.String)">
+            <summary>
+            Given a single line of the logfile this function splits the line content into columns. The function returns 
+            a string array containing the splitted content.
+            </summary>
+            <remarks>
+            This function is called by LogExpert for every line that has to be drawn in the grid view. The faster your code
+            handles the splitting, the faster LogExpert can draw the grid view content.<br></br>
+            <br></br>
+            Notes about timeshift handling:<br></br>
+            If your columnizer implementation supports timeshift (see <see cref="M:LogExpert.ILogLineColumnizer.IsTimeshiftImplemented">IsTimeshiftImplemented</see>) 
+            you have to add the timestamp offset to the columns representing the timestamp (e.g. columns like 'date' and 'time').
+            In practice this means you have to parse the date/time value of your log line (see <see cref="M:LogExpert.ILogLineColumnizer.GetTimestamp(LogExpert.ILogLineColumnizerCallback,System.String)">GetTimestamp</see>) 
+            add the offset and convert the timestamp back to string value(s).
+            </remarks>
+            <param name="callback">Callback interface with functions which can be used by the columnizer</param>
+            <param name="line">The line content to be splitted</param>
+        </member>
+        <member name="M:LogExpert.ILogLineColumnizer.IsTimeshiftImplemented">
+            <summary>
+            Returns true, if the columnizer supports timeshift handling.
+            </summary>
+            <remarks>
+            If you return true, you also have to implement the function SetTimeOffset(), GetTimeOffset() and GetTimestamp().
+            You also must handle PushValue() for the column(s) that displays the timestamp.
+            </remarks>
+        </member>
+        <member name="M:LogExpert.ILogLineColumnizer.SetTimeOffset(System.Int32)">
+            <summary>
+            Sets an offset to be used for displaying timestamp values. You have to implement this function, if 
+            your IsTimeshiftImplemented() function return true.
+            </summary>
+            <remarks>
+            You have to store the given value in the Columnizer instance and add this offset to the timestamp column(s) returned by SplitLine() 
+            (e.g. in the date and time columns).
+            </remarks>
+            <param name="msecOffset">The timestamp offset in milliseconds.</param>
+        </member>
+        <member name="M:LogExpert.ILogLineColumnizer.GetTimeOffset">
+            <summary>
+            Returns the current stored timestamp offset (set by SetTimeOffset()).
+            </summary>
+        </member>
+        <member name="M:LogExpert.ILogLineColumnizer.GetTimestamp(LogExpert.ILogLineColumnizerCallback,System.String)">
+            <summary>
+            Returns the timestamp value of the given line as a .NET DateTime object. If there's no valid timestamp in the
+            given line you have to return DateTime.MinValue.
+            </summary>
+            <remarks>
+            When implementing this function you have to parse the given log line for a valid date/time to get a DateTime object.
+            Before returning the DateTime object you have to add the offset which was set by SetTimeOffset().<br></br>
+            <br></br>
+            Note: If not all lines of your log files contain a valid date/time it's recommended to do some fail-fast pre checks before
+            calling the parse functions of DateTime. This saves a lot of time because DateTime.ParseExact() is very slow when fed with
+            invalid input.
+            </remarks>
+            <param name="callback">Callback interface with functions which can be used by the columnizer</param>
+            <param name="line">The line content which timestamp has to be returned.</param>
+        </member>
+        <member name="M:LogExpert.ILogLineColumnizer.PushValue(LogExpert.ILogLineColumnizerCallback,System.Int32,System.String,System.String)">
+            <summary>
+            This function is called if the user changes a value in a column (edit mode in the log view).
+            The purpose of the function is to determine a new timestamp offset. So you have to handle the
+            call only if the given column displays a timestamp.
+            </summary>
+            <remarks>
+            You should parse both values (oldValue, value) for valid timestamps, determine the time offset and store the offset as
+            the new timeshift offset (and of course use this offset in the GetTimestamp() and SplitLine() functions).
+            </remarks>
+            <param name="callback">Callback interface with functions which can be used by the columnizer</param>
+            <param name="column">The column number which value has changed.</param>
+            <param name="value">The new value.</param>
+            <param name="oldValue">The old value.</param>
+        </member>
+        <member name="T:LogExpert.ILogLineXmlColumnizer">
+            <summary>
+            This is the interface for a Columnizer which supports XML log files. This interface extends
+            the <see cref="T:LogExpert.ILogLineColumnizer"/> interface.
+            LogExpert will automatically load a log file in XML mode if the current Columnizer implements 
+            this interface.
+            </summary>
+            <remarks>
+            <para>
+            Note that the ILogLineXmlColumnizer interface is also a marker interface. If the user selects a
+            Columnizer that implements ILogLineXmlColumnizer then the log file will be treatet as XML file.
+            <br></br>
+            When in XML mode, LogExpert will scan for XML fragmets. These fragments are defined by opening
+            and closing tags (e.g. &lt;log4j:event&gt; and &lt;/log4j:event&gt;). Every fragment is 
+            transformed by using a XSLT template. The result of the transformation (which may be multi-lined) 
+            is splitted into single lines. These single lines are the lines you will see in LogExpert's display.
+            </para>
+            <para>
+            If you implement a XML Columnizer you have to provide the start tag and end tag and a 
+            XSLT. Also you have to provide a namespace declaration, if your logfile uses name spaces.
+            All this stuff must be provided by returning a IXmlLogConfiguration in the <see cref="M:LogExpert.ILogLineXmlColumnizer.GetXmlLogConfiguration"/> method.
+            </para>
+            <para>
+            The processing of XML log files is done in the following steps:
+            <ol>
+            <li>LogExpert reads the file and separates it into fragments of XML content using the given 
+                start/end tags (<see cref="M:LogExpert.ILogLineXmlColumnizer.GetXmlLogConfiguration"/>)</li>
+            <li>The fragments will be translated using the given XSLT (<see cref="M:LogExpert.ILogLineXmlColumnizer.GetXmlLogConfiguration"/>)
+                The result is one or more lines of text content. These lines will be the lines LogExpert will 'see'
+                in its internal buffer and line management. They will be handled like normal text lines in other 
+                (non-XML) log files.
+            </li>
+            <li>The lines will be passed to the usual <see cref="T:LogExpert.ILogLineColumnizer"/> methods before displaying. So you can handle
+                field splitting in the way known from <see cref="T:LogExpert.ILogLineColumnizer"/>.
+            </li>
+            </ol>
+            </para>
+            </remarks>
+        </member>
+        <member name="M:LogExpert.ILogLineXmlColumnizer.GetXmlLogConfiguration">
+            <summary>
+            You have to implement this function to provide a configuration for LogExpert's XML reader.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LogExpert.ILogLineXmlColumnizer.GetLineTextForClipboard(System.String,LogExpert.ILogLineColumnizerCallback)">
+            <summary>
+            Returns the text which should be copied into the clipboard when the user want to copy selected
+            lines to clipboard.
+            </summary>
+            <param name="logLine">The line as retrieved from the internal log reader. This is
+            the result of the XSLT processing with your provided stylesheet.
+            </param>
+            <param name="lineNum">The line number for the log line</param>
+            <param name="callback">Callback which may be used by the Columnizer</param>
+            <returns>A string which is placed into the clipboard</returns>
+            <remarks>
+            This function is intended to convert the representation of a log line produced by XSLT transformation into 
+            a format suitable for clipboard.
+            The method can be used in the case that the XSLT transformation result is not very 'human readable'.
+            <br></br>
+            An example is the included Log4jXMLColumnizer. It uses special characters to separate the fields.
+            The characters are added while XSLT transformation. The usual Columnizer functions (e.g. SplitLIne()) will
+            use these markers for line splitting.
+            When copying to clipboard, this method will remove the special characters and replace them with spaces.
+            </remarks>
+        </member>
+        <member name="T:LogExpert.ILogLineColumnizerCallback">
+            <summary>
+            This is a callback interface. Some of the ILogLineColumnizer functions
+            are called with this interface as an argument. You don't have to implement this interface. It's implemented
+            by LogExpert. You can use it in your own columnizers, if you need it.
+            </summary>
+            <remarks>
+            Implementors of ILogLineColumnizer can use the provided functions to get some more informations
+            about the log file. In the most cases you don't need this interface. It's provided here for special cases.<br></br>
+            <br></br>
+            An example would be when the log lines contains only the time of day but the date is coded in the file name. In this situation
+            you can use the GetFileName() function to retrieve the name of the current file to build a complete timestamp.
+            </remarks>
+        </member>
+        <member name="M:LogExpert.ILogLineColumnizerCallback.GetLineNum">
+            <summary>
+            This function returns the current line number. That is the line number of the log line
+            a ILogLineColumnizer function is called for (e.g. the line that has to be painted).
+            </summary>
+            <returns>The current line number</returns>
+        </member>
+        <member name="M:LogExpert.ILogLineColumnizerCallback.GetFileName">
+            <summary>
+            Returns the full file name (path + name) of the current log file.
+            </summary>
+            <returns>File name of current log file</returns>
+        </member>
+        <member name="M:LogExpert.ILogLineColumnizerCallback.GetLogLine(System.Int32)">
+            <summary>
+            Returns the log line with the given index (zero-based).
+            </summary>
+            <param name="lineNum">Number of the line to be retrieved</param>
+            <returns>A string with line content or null if line number is out of range</returns>
+        </member>
+        <member name="M:LogExpert.ILogLineColumnizerCallback.GetLineCount">
+            <summary>
+            Returns the number of lines of the logfile.
+            </summary>
+            <returns>Number of lines.</returns>
+        </member>
+        <member name="T:LogExpert.ILogExpertCallback">
+            <summary>
+            This callback interface is implemented by LogExpert. You can use it e.g. when implementing a
+            context menu plugin.
+            </summary>
+        </member>
+        <member name="M:LogExpert.ILogExpertCallback.AddTempFileTab(System.String,System.String)">
+            <summary>
+            Call this function to add a new temporary file tab to LogExpert. This may be usefull
+            if your plugin creates some output into a file which has to be shown in LogExpert.
+            </summary>
+            <param name="fileName">Path of the file to be loaded.</param>
+            <param name="title">Title shown on the tab.</param>
+            <remarks>
+            The file tab is internally handled like the temp file tabs which LogExpert uses for 
+            FilterTabs or clipboard copy tabs.
+            This has some implications:
+            <ul>
+              <li>The file path is not shown. Only the title is shown.</li>
+              <li>The encoding of the file is expected to be 2-byte Unicode!</li>
+              <li>The file will not be added to the history of opened files.</li>
+              <li>The file will be deleted when closing the tab!</li>
+            </ul>
+            </remarks>
+        </member>
+        <member name="M:LogExpert.ILogExpertCallback.AddPipedTab(System.Collections.Generic.IList{LogExpert.LineEntry},System.String)">
+            <summary>
+            With this function you can create a new tab and add a bunch of text lines to it.
+            </summary>
+            <param name="lineEntryList">A list with LineEntry items containing text and an 
+                optional reference to the original file location.</param>
+            <param name="title">The title for the new tab.</param>
+            <remarks>
+            <para>
+            The lines are given by a list of <see cref="T:LogExpert.LineEntry"/>. If you set the lineNumber field
+            in each LineEntry to a lineNumber of the original logfile (the logfile for which the context 
+            menu is called for), you can create a 'link' from the line of your 'target output' to a line
+            in the 'source tab'.
+            </para>
+            <para>
+            The user can then navigate from the line in the new tab to the referenced
+            line in the original file (by using "locate in original file" from the context menu).
+            This is especially useful for plugins that generate output lines which are directly associated 
+            to the selected input lines.
+            </para>
+            <para>
+            If you can't provide a reference to a location in the logfile, set the line number to -1. This
+            will disable the "locate in original file" menu entry.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:LogExpert.ILogExpertCallback.GetTabTitle">
+            <summary>
+            Returns the title of the current tab (the tab for which the context menu plugin was called for).
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:LogExpert.IXmlLogConfiguration">
+            <summary>
+            This interface declares the configuration data which is needed for XML log file parsing.
+            </summary>
+        </member>
+        <member name="P:LogExpert.IXmlLogConfiguration.XmlStartTag">
+            <summary>
+            The opening XML tag for a log entry. Every log entry starts with this tag.<br></br>
+            Example: &lt;log4j:event&gt;
+            </summary>
+        </member>
+        <member name="P:LogExpert.IXmlLogConfiguration.XmlEndTag">
+            <summary>
+            The closing tag for a log entry.<br></br>
+            Example: &lt;/log4j:event&gt;
+            </summary>
+        </member>
+        <member name="P:LogExpert.IXmlLogConfiguration.Stylesheet">
+            <summary>
+            A complete XSLT which is used to transform the XML fragments into text lines which can be
+            processed by the Columnizer.
+            </summary>
+        </member>
+        <member name="P:LogExpert.IXmlLogConfiguration.Namespace">
+            <summary>
+            A namespace declaration. The returned array must contain 2 strings: The namespace and its declaration.<br></br>
+            Example: {"log4j", "http://jakarta.apache.org/log4j"}
+            
+            </summary>
+        </member>
+        <member name="T:LogExpert.LineEntry">
+            <summary>
+            This helper struct holds a log line and its line number (zero based).
+            This struct is used by <see cref="T:LogExpert.ILogExpertCallback"/>.
+            </summary>
+            <seealso cref="M:LogExpert.ILogExpertCallback.AddPipedTab(System.Collections.Generic.IList{LogExpert.LineEntry},System.String)"/>
+        </member>
+        <member name="F:LogExpert.LineEntry.logLine">
+            <summary>
+            The content of the line.
+            </summary>
+        </member>
+        <member name="F:LogExpert.LineEntry.lineNum">
+            <summary>
+            The line number. See <see cref="M:LogExpert.ILogExpertCallback.AddPipedTab(System.Collections.Generic.IList{LogExpert.LineEntry},System.String)"/> for an explanation of the line number.
+            </summary>
+        </member>
+        <member name="T:ColumnizerLib.IFileSystemCallback">
+            <summary>
+            Service interface implemented by LogExpert. This can be used by IFileSystemPlugin implementations to get certain services.
+            </summary>
+        </member>
+        <member name="M:ColumnizerLib.IFileSystemCallback.GetLogger">
+            <summary>
+            Retrieve a logger. The plugin can use the logger to write log messages into LogExpert's log file.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:ColumnizerLib.ILogExpertLogger">
+            <summary>
+            Simple Logger interface to let plugins log into LogExpert's application log file.
+            </summary>
+        </member>
+        <member name="M:ColumnizerLib.ILogExpertLogger.LogInfo(System.String)">
+            <summary>
+            Logs a message on INFO level to LogExpert#s log file. The logfile is only active in debug builds.
+            The logger in LogExpert will automatically add the class and the method name of the caller.
+            </summary>
+            <param name="msg">A message to be logged.</param>
+        </member>
+        <member name="M:ColumnizerLib.ILogExpertLogger.LogDebug(System.String)">
+            <summary>
+            Logs a message on DEBUG level to LogExpert#s log file. The logfile is only active in debug builds.
+            The logger in LogExpert will automatically add the class and the method name of the caller.
+            </summary>
+            <param name="msg">A message to be logged.</param>
+        </member>
+        <member name="M:ColumnizerLib.ILogExpertLogger.LogWarn(System.String)">
+            <summary>
+            Logs a message on WARN level to LogExpert#s log file. The logfile is only active in debug builds.
+            The logger in LogExpert will automatically add the class and the method name of the caller.
+            </summary>
+            <param name="msg">A message to be logged.</param>
+        </member>
+        <member name="M:ColumnizerLib.ILogExpertLogger.LogError(System.String)">
+            <summary>
+            Logs a message on ERROR level to LogExpert#s log file. The logfile is only active in debug builds.
+            The logger in LogExpert will automatically add the class and the method name of the caller.
+            </summary>
+            <param name="msg">A message to be logged.</param>
+        </member>
+    </members>
+</doc>

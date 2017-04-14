@@ -1,0 +1,120 @@
+﻿using LogExpert;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProcessEngineColumnizer
+{
+    /// <summary>
+    /// examples
+    /// <![CDATA[
+    /// <conversionPattern value="%date{dd MMM yyyy HH:mm:ss,fff}||[%thread]||%-5level||%logger||%message%newline%exception"/>
+    /// 13 Apr 2017 02:50:33,871||[ServerScheduler_Worker-8]||DEBUG||Kapsch.IS.ProcessEngine.Runtime||[RunTimeGuid:1af14e3e-39bf-414c-8985-09f8291c6ae3; WODE:EMPL_CHANGE_CAT0; WOIN:WOIN_d477a94f4d544e28b58386a56c9cfdd4; ActivityInstance:'n/a']: Re-Entry into workflow. Start process from activity: 17.NavisionTicketActivityWait
+    /// 13 Apr 2017 02:50:47,336||[ServerScheduler_Worker-8]||DEBUG||Kapsch.IS.ProcessEngine.Engine||No logging context available. : before updating workflow database table WorkflowIntances
+    /// 13 Apr 2017 02:51:16,244||[ServerScheduler_Worker-4]||INFO ||Kapsch.IS.ProcessEngine.Runtime||[RunTimeGuid:966728c2-dff5-4ceb-ad1b-bacf6d04c4b4; WODE:n/a; WOIN:n/a; ActivityInstance:'n/a']: Workflow RunEngine() started.
+    /// multi line
+    /// 13 Apr 2017 02:54:47,179||[ServerScheduler_Worker-9]||DEBUG||Kapsch.IS.EDP.WFActivity.TaskDecision.TaskDecisionActivityWait||[RunTimeGuid:3de0a861-d445-4655-83a2-d6cf4fed6745; WODE:EQDE_ADD_CAT4a; WOIN:WOIN_b2df28e05296454b941a2d51ba3f020d; ActivityInstance:'8.TaskDecisionActivityWait']: Dumping waitItemWFE: AWI_ID=221      AWI_InstanceID=WOIN_b2df28e05296454b941a2d51ba3f020d    AWI_ActivityInstanceID=7.TaskDecisionActivity   AWI_Status=Wait         AWI_StartDate=4/10/2017         AWI_DueDate=5/10/2017   AWI_CompletedDate=null  AWI_Config=<root>
+    ///  <item name = "newLinkedTaskID" value="f4c4e46ba87f4d929986be3b60105025" />
+    ///  <item name = "wfUniqueUD" value="WOIN_b2df28e05296454b941a2d51ba3f020d__7.TaskDecisionActivity" />
+    ///  <item name = "taskGUID" value="TAIT_f4e72ab3625b4342b0461f0d7972ed05" />
+    /// </root>
+    /// 13 Apr 2017 06:02:46,086||[ServerScheduler_Worker-4]||INFO ||Kapsch.IS.ProcessEngine.Runtime||[RunTimeGuid:03da999b-da87-4c97-829a-8905841a48cc; WODE:; WOIN:WOIN_5dfcac9f2cdd45cf9420c0013f3394b8; ActivityInstance:'n/a']: Working on TopEngineAlert: (WFEEngineAlert): 2493 - 3/31/2017 2:07:26 PM - Polling
+
+    /// ]]>
+    /// </summary>
+    public class ProcessEngineColumnizer : ILogLineColumnizer
+    {
+        private static NLog.ILogger _logger = NLog.LogManager.GetCurrentClassLogger();
+        private const int CONST_COLUMNCOUNT = 5;
+        private string[] splitString = { "||" };
+
+        public int GetColumnCount()
+        {
+            return CONST_COLUMNCOUNT;
+        }
+
+        public string[] GetColumnNames()
+        {
+            string[] names = new string[CONST_COLUMNCOUNT];
+            names[0] = "DateTime";
+            names[1] = "Thread&Level";
+            names[2] = "Logger";
+            names[3] = "ProcessEngine Context";
+            names[4] = "Message";
+            return names;
+        }
+
+        public string[] SplitLine(ILogLineColumnizerCallback callback, string line)
+        {
+            // fist split line into || sections (the log4net columns)
+            string[] log4netSections = line.Split(splitString, 5, StringSplitOptions.None);
+
+            //extract process engine context out of message
+            string wholeMessage = log4netSections[4];
+            // find first [ and next ] -> thats the proc eng context
+            // [RunTimeGuid:966728c2-c4b4; WODE:12dd; WOIN:12a; ActivityInstance:'n/a']
+            int firstBracket = wholeMessage.IndexOf("[");
+            int lastBracket = wholeMessage.IndexOf("]");
+
+            if (firstBracket < 0)
+                firstBracket = -1;
+            if (lastBracket < 0)
+                lastBracket = wholeMessage.Length - 1;
+
+            string procEngContext = wholeMessage.Substring(firstBracket + 1, lastBracket);
+            string msgNoContext = wholeMessage.Substring(lastBracket + 1).Trim();
+
+            if (msgNoContext.StartsWith(":"))
+                msgNoContext = msgNoContext.Substring(1).Trim();
+            if (msgNoContext.StartsWith(":"))
+                msgNoContext = msgNoContext.Substring(1).Trim();
+
+            string[] columnContent = new string[CONST_COLUMNCOUNT];
+            columnContent[0] = log4netSections[0];
+            columnContent[1] = log4netSections[1] + log4netSections[2];
+            columnContent[2] = log4netSections[3];
+            columnContent[3] = procEngContext;
+            columnContent[4] = msgNoContext;
+            return columnContent;
+        }
+
+        public bool IsTimeshiftImplemented()
+        {
+            return false;
+        }
+
+        public string GetDescription()
+        {
+            return "attempts to make columsn out of logging context e.g. WOIN, Activity, etc...\r\nuse this log4net pattern:\r\n<conversionPattern value=\" % date{ dd MMM yyyy HH:mm: ss,fff}||[% thread] ||% -5level ||% logger ||% message % newline % exception\"/>";
+        }
+
+        public string GetName()
+        {
+            return "ProcessEngineColumnizer";
+        }
+
+        public int GetTimeOffset()
+        {
+            throw new NotImplementedException();
+        }
+
+        public DateTime GetTimestamp(ILogLineColumnizerCallback callback, string line)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void PushValue(ILogLineColumnizerCallback callback, int column, string value, string oldValue)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetTimeOffset(int msecOffset)
+        {
+            throw new NotImplementedException();
+        }
+
+
+    }
+}
