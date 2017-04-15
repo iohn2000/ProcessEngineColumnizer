@@ -24,11 +24,17 @@ namespace ProcessEngineColumnizer
 
     /// ]]>
     /// </summary>
-    public class ProcessEngineColumnizer : ILogLineColumnizer
+    public class ProcessEngineColumnizer : ILogLineColumnizer, IPreProcessColumnizer, IColumnizerConfigurator
     {
         private static NLog.ILogger _logger = NLog.LogManager.GetCurrentClassLogger();
         private const int CONST_COLUMNCOUNT = 5;
         private string[] splitString = { "||" };
+        private ParLogLib parserLib;
+
+        public ProcessEngineColumnizer()
+        {
+            this.parserLib = new ParLogLib("fleck");
+        }
 
         public int GetColumnCount()
         {
@@ -129,6 +135,36 @@ namespace ProcessEngineColumnizer
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// The Columnizer should always be consistent in the way which lines will be dropped. 
+        /// You cannot predict how often the PreProcessLine() will be called and when. 
+        /// This depends on the buffer settings in LogExpert. 
+        /// The method is only called when the line has to be read from disk.
+        /// </summary>
+        /// <param name="logLine"></param>
+        /// <param name="lineNum"></param>
+        /// <param name="realLineNum"></param>
+        /// <returns></returns>
+        public string PreProcessLine(string logLine, int lineNum, int realLineNum)
+        {
+            bool includeLine = this.parserLib.Parse(logLine);
 
+            //_logger.Debug("logline called. lineNum:{0} ; realLineNum:{1}", lineNum, realLineNum);
+            
+            if (includeLine)
+                return logLine;
+            else
+                return null;
+        }
+
+        public void Configure(ILogLineColumnizerCallback callback, string configDir)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void LoadConfig(string configDir)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

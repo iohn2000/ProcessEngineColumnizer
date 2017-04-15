@@ -41,6 +41,8 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -49,8 +51,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="frmProcEngFilterSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmProcEngFilterSettings.Designer.cs">
+      <DependentUpon>frmProcEngFilterSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ParLogLib.cs" />
     <Compile Include="ProcessEngineColumnizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="frmProcEngFilterSettings.resx">
+      <DependentUpon>frmProcEngFilterSettings.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
