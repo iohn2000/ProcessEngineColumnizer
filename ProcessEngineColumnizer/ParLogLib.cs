@@ -20,10 +20,10 @@ namespace ProcessEngineColumnizer
         private bool ShowPerformance = false;
         private Stopwatch stopwatch = new Stopwatch();
         private bool matchingMode = false;
+        private string searchPattern;
 
-        public ParLogLib(string searchTerm)
+        public ParLogLib(string searchTerm, string searchPattern) 
         {
-            //this.ContentInputManager = contentInputManager;
             this.StartOfLogEntryRegex = new Regex(defaultStartPattern, RegexOptions.IgnoreCase);
             this.SearchTermRegex = new Regex(searchTerm, RegexOptions.IgnoreCase);
             this.ShowPerformance = false;

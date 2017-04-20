@@ -58,6 +58,7 @@
       <DependentUpon>frmProcEngFilterSettings.cs</DependentUpon>
     </Compile>
     <Compile Include="ParLogLib.cs" />
+    <Compile Include="ProcessEngineColSettings.cs" />
     <Compile Include="ProcessEngineColumnizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -15,14 +15,37 @@ namespace ProcessEngineColumnizer
     /// </summary>
     public partial class frmProcEngFilterSettings : Form
     {
+        private ProcessEngineColSettings config;
+
         public frmProcEngFilterSettings()
         {
             InitializeComponent();
         }
 
-        private void label1_Click(object sender, EventArgs e)
+        public frmProcEngFilterSettings(ProcessEngineColSettings config)
         {
+            this.config = config;
+            InitializeComponent();
+        }
 
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            this.config.StartPattern = txtStartPattern.Text;
+            this.config.SearchPattern = txtSearchPattern.Text;
+            this.config.ShowCompactView = chkShowCompactView.Checked;
+            this.Close();
+        }
+
+        private void frmProcEngFilterSettings_Load(object sender, EventArgs e)
+        {
+            txtStartPattern.Text = this.config.StartPattern;
+            txtSearchPattern.Text = this.config.SearchPattern;
+            chkShowCompactView.Checked = this.config.ShowCompactView;
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }

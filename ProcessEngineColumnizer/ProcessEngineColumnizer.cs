@@ -1,9 +1,13 @@
 ﻿using LogExpert;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace ProcessEngineColumnizer
 {
@@ -30,10 +34,13 @@ namespace ProcessEngineColumnizer
         private const int CONST_COLUMNCOUNT = 5;
         private string[] splitString = { "||" };
         private ParLogLib parserLib;
+        private ProcessEngineColSettings config;
+        private const string configFileName = "\\processEngineColumnizerSettings.dat";
 
         public ProcessEngineColumnizer()
         {
-            this.parserLib = new ParLogLib("fleck");
+            
+            this.config = new ProcessEngineColSettings();
         }
 
         public int GetColumnCount()
@@ -147,24 +154,68 @@ namespace ProcessEngineColumnizer
         /// <returns></returns>
         public string PreProcessLine(string logLine, int lineNum, int realLineNum)
         {
-            bool includeLine = this.parserLib.Parse(logLine);
+            _logger.Debug("in PreProcessLine, SearchPattern={0}", this.config.SearchPattern);
+            if (!string.IsNullOrWhiteSpace(this.config.SearchPattern))
+            {
+                bool includeLine = this.parserLib.Parse(logLine);
 
-            //_logger.Debug("logline called. lineNum:{0} ; realLineNum:{1}", lineNum, realLineNum);
-            
-            if (includeLine)
-                return logLine;
+                //_logger.Debug("logline called. lineNum:{0} ; realLineNum:{1}", lineNum, realLineNum);
+
+                if (includeLine)
+                    return logLine;
+                else
+                    return null;
+            }
             else
-                return null;
+                return logLine;
+           
         }
 
         public void Configure(ILogLineColumnizerCallback callback, string configDir)
         {
-            throw new NotImplementedException();
+            
+            string configPath = configDir + configFileName;
+            frmProcEngFilterSettings dlg = new frmProcEngFilterSettings(this.config);
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+                Stream fs = new FileStream(configPath, FileMode.Create, FileAccess.Write);
+                formatter.Serialize(fs, this.config);
+                fs.Close();
+            }
         }
 
         public void LoadConfig(string configDir)
         {
-            throw new NotImplementedException();
+            string configPath = configDir + configFileName;
+
+            if (!File.Exists(configPath))
+            {
+                this.config = new ProcessEngineColSettings();
+                this.config.InitDefaults();
+            }
+            else
+            {
+                Stream fs = File.OpenRead(configPath);
+                BinaryFormatter formatter = new BinaryFormatter();
+                try
+                {
+                    this.config = (ProcessEngineColSettings)formatter.Deserialize(fs);
+                }
+                catch (SerializationException e)
+                {
+                    _logger.Error(e);
+                    MessageBox.Show(e.Message, "Deserialize");
+                    this.config = new ProcessEngineColSettings();
+                    this.config.InitDefaults();
+                }
+                finally
+                {
+                    fs.Close();
+                }
+            }
+            this.parserLib = new ParLogLib(this.config.StartPattern, this.config.SearchPattern);
+            _logger.Debug("SearchPattern loaded:{0}", this.config.SearchPattern);
         }
     }
 }
