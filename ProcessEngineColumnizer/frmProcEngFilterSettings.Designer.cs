@@ -55,9 +55,11 @@
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(467, 148);
+            this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.btnOK.Location = new System.Drawing.Point(623, 182);
+            this.btnOK.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnOK.Name = "btnOK";
-            this.btnOK.Size = new System.Drawing.Size(93, 23);
+            this.btnOK.Size = new System.Drawing.Size(124, 28);
             this.btnOK.TabIndex = 0;
             this.btnOK.Text = "Save && Close";
             this.btnOK.UseVisualStyleBackColor = true;
@@ -66,9 +68,11 @@
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.Location = new System.Drawing.Point(566, 148);
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Location = new System.Drawing.Point(755, 182);
+            this.btnCancel.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
+            this.btnCancel.Size = new System.Drawing.Size(100, 28);
             this.btnCancel.TabIndex = 1;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
@@ -79,7 +83,7 @@
             this.tableLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tableLayoutPanel1.ColumnCount = 2;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 140F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 187F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.Controls.Add(this.panel1, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.panel2, 0, 1);
@@ -87,30 +91,33 @@
             this.tableLayoutPanel1.Controls.Add(this.panel4, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.panel5, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this.panel6, 1, 2);
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(13, 13);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(17, 16);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 3;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(628, 124);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(837, 153);
             this.tableLayoutPanel1.TabIndex = 2;
             // 
             // panel1
             // 
             this.panel1.Controls.Add(this.label1);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(3, 3);
+            this.panel1.Location = new System.Drawing.Point(4, 4);
+            this.panel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(134, 35);
+            this.panel1.Size = new System.Drawing.Size(179, 43);
             this.panel1.TabIndex = 0;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(3, 7);
+            this.label1.Location = new System.Drawing.Point(4, 9);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(128, 13);
+            this.label1.Size = new System.Drawing.Size(157, 16);
             this.label1.TabIndex = 0;
             this.label1.Text = "Pattern Start New Logline";
             // 
@@ -118,17 +125,19 @@
             // 
             this.panel2.Controls.Add(this.label2);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel2.Location = new System.Drawing.Point(3, 44);
+            this.panel2.Location = new System.Drawing.Point(4, 55);
+            this.panel2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(134, 35);
+            this.panel2.Size = new System.Drawing.Size(179, 43);
             this.panel2.TabIndex = 1;
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(3, 7);
+            this.label2.Location = new System.Drawing.Point(4, 9);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(105, 13);
+            this.label2.Size = new System.Drawing.Size(131, 16);
             this.label2.TabIndex = 0;
             this.label2.Text = "Pattern Search Term";
             // 
@@ -136,36 +145,40 @@
             // 
             this.panel3.Controls.Add(this.txtStartPattern);
             this.panel3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel3.Location = new System.Drawing.Point(143, 3);
+            this.panel3.Location = new System.Drawing.Point(191, 4);
+            this.panel3.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(482, 35);
+            this.panel3.Size = new System.Drawing.Size(643, 43);
             this.panel3.TabIndex = 2;
             // 
             // txtStartPattern
             // 
             this.txtStartPattern.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtStartPattern.Location = new System.Drawing.Point(4, 4);
+            this.txtStartPattern.Location = new System.Drawing.Point(5, 5);
+            this.txtStartPattern.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.txtStartPattern.Name = "txtStartPattern";
-            this.txtStartPattern.Size = new System.Drawing.Size(475, 20);
+            this.txtStartPattern.Size = new System.Drawing.Size(632, 22);
             this.txtStartPattern.TabIndex = 0;
             // 
             // panel4
             // 
             this.panel4.Controls.Add(this.txtSearchPattern);
             this.panel4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel4.Location = new System.Drawing.Point(143, 44);
+            this.panel4.Location = new System.Drawing.Point(191, 55);
+            this.panel4.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(482, 35);
+            this.panel4.Size = new System.Drawing.Size(643, 43);
             this.panel4.TabIndex = 3;
             // 
             // txtSearchPattern
             // 
             this.txtSearchPattern.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtSearchPattern.Location = new System.Drawing.Point(4, 4);
+            this.txtSearchPattern.Location = new System.Drawing.Point(5, 5);
+            this.txtSearchPattern.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.txtSearchPattern.Name = "txtSearchPattern";
-            this.txtSearchPattern.Size = new System.Drawing.Size(475, 20);
+            this.txtSearchPattern.Size = new System.Drawing.Size(632, 22);
             this.txtSearchPattern.TabIndex = 0;
             // 
             // panel5
@@ -173,17 +186,19 @@
             this.panel5.AutoSize = true;
             this.panel5.Controls.Add(this.label3);
             this.panel5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel5.Location = new System.Drawing.Point(3, 85);
+            this.panel5.Location = new System.Drawing.Point(4, 106);
+            this.panel5.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.panel5.Name = "panel5";
-            this.panel5.Size = new System.Drawing.Size(134, 36);
+            this.panel5.Size = new System.Drawing.Size(179, 43);
             this.panel5.TabIndex = 4;
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(3, 8);
+            this.label3.Location = new System.Drawing.Point(4, 10);
+            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(105, 13);
+            this.label3.Size = new System.Drawing.Size(130, 16);
             this.label3.TabIndex = 0;
             this.label3.Text = "Show Compact View";
             // 
@@ -191,31 +206,34 @@
             // 
             this.panel6.Controls.Add(this.chkShowCompactView);
             this.panel6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel6.Location = new System.Drawing.Point(143, 85);
+            this.panel6.Location = new System.Drawing.Point(191, 106);
+            this.panel6.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.panel6.Name = "panel6";
-            this.panel6.Size = new System.Drawing.Size(482, 36);
+            this.panel6.Size = new System.Drawing.Size(643, 43);
             this.panel6.TabIndex = 5;
             // 
             // chkShowCompactView
             // 
             this.chkShowCompactView.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.chkShowCompactView.Location = new System.Drawing.Point(4, 3);
+            this.chkShowCompactView.Location = new System.Drawing.Point(5, 4);
+            this.chkShowCompactView.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.chkShowCompactView.Name = "chkShowCompactView";
-            this.chkShowCompactView.Size = new System.Drawing.Size(475, 24);
+            this.chkShowCompactView.Size = new System.Drawing.Size(633, 30);
             this.chkShowCompactView.TabIndex = 0;
             this.chkShowCompactView.UseVisualStyleBackColor = true;
             // 
             // frmProcEngFilterSettings
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(653, 183);
+            this.ClientSize = new System.Drawing.Size(871, 225);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
-            this.MaximumSize = new System.Drawing.Size(6000, 6000);
-            this.MinimumSize = new System.Drawing.Size(388, 39);
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.MaximumSize = new System.Drawing.Size(7995, 7376);
+            this.MinimumSize = new System.Drawing.Size(512, 39);
             this.Name = "frmProcEngFilterSettings";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Process Engine Filter Settings";

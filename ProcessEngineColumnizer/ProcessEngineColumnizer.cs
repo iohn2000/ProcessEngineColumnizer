@@ -1,12 +1,9 @@
 ﻿using LogExpert;
 using System;
-using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ProcessEngineColumnizer
@@ -31,37 +28,70 @@ namespace ProcessEngineColumnizer
     public class ProcessEngineColumnizer : ILogLineColumnizer, IPreProcessColumnizer, IColumnizerConfigurator
     {
         private static NLog.ILogger _logger = NLog.LogManager.GetCurrentClassLogger();
-        private const int CONST_COLUMNCOUNT = 5;
+        private const int CONST_COLUMNCOUNT_Detailed = 8;
+        private const int CONST_COLUMNCOUNT_Compact = 7;
         private string[] splitString = { "||" };
+        private string[] splitStringContext = { ";" };
         private ParLogLib parserLib;
         private ProcessEngineColSettings config;
         private const string configFileName = "\\processEngineColumnizerSettings.dat";
+        private string[] dateFormatString = new string[] { "dd MMM yyyy HH:mm:ss,fff" };
 
         public ProcessEngineColumnizer()
         {
-            
             this.config = new ProcessEngineColSettings();
         }
 
         public int GetColumnCount()
         {
-            return CONST_COLUMNCOUNT;
+            if (this.config.ShowCompactView)
+                return CONST_COLUMNCOUNT_Compact;
+            else
+                return CONST_COLUMNCOUNT_Detailed;
+
         }
 
         public string[] GetColumnNames()
         {
-            string[] names = new string[CONST_COLUMNCOUNT];
-            names[0] = "DateTime";
-            names[1] = "Thread&Level";
-            names[2] = "Logger";
-            names[3] = "ProcessEngine Context";
-            names[4] = "Message";
-            return names;
+            //[RunTimeGuid:966728c2-c4b4; WODE:12dd; WOIN:12a; ActivityInstance:'n/a']
+            if (this.config.ShowCompactView)
+            {
+                string[] names = new string[CONST_COLUMNCOUNT_Compact];
+                names[0] = "DateTime";
+                names[1] = "Level";
+                names[2] = "Logger";
+                names[3] = "WODE";
+                names[4] = "WOIN";
+                names[5] = "ActivityInstance";
+                names[6] = "Message";
+                return names;
+            }
+            else
+            {
+                string[] names = new string[CONST_COLUMNCOUNT_Detailed];
+                names[0] = "DateTime";
+                names[1] = "Thread&Level";
+                names[2] = "Logger";
+                names[3] = "RunTimeGuid";
+                names[4] = "WODE";
+                names[5] = "WOIN";
+                names[6] = "ActivityInstance";
+                names[7] = "Message";
+                return names;
+            }
         }
 
         public string[] SplitLine(ILogLineColumnizerCallback callback, string line)
         {
-            string[] columnContent = new string[CONST_COLUMNCOUNT];
+            if (this.config.ShowCompactView)
+                return DoCompactColumnMode(line);
+            else
+                return DoDetailedColumnMode(line);
+        }
+
+        private string[] DoCompactColumnMode(string line)
+        {
+            string[] columnContent = new string[CONST_COLUMNCOUNT_Compact];
             // fist split line into || sections (the log4net columns)
             string[] log4netSections = line.Split(splitString, 5, StringSplitOptions.None);
 
@@ -69,40 +99,152 @@ namespace ProcessEngineColumnizer
             //there wont be 5 sections separated with ||
             if (log4netSections.Length < 5)
             {
-                columnContent[0] = "-";
-                columnContent[1] = "-";
-                columnContent[2] = "-";
-                columnContent[3] = "-";
-                columnContent[4] = line;
+                columnContent[0] = "-"; columnContent[1] = "-"; columnContent[2] = "-"; columnContent[3] = "-"; columnContent[4] = "-"; columnContent[5] = "-";
+                columnContent[6] = line;
             }
             else
             {
-                //extract process engine context out of message
-                string wholeMessage = log4netSections[4];
+                // set column values
+
+                // compact date
+                DateTime result;
+
+                var isOK = DateTime.TryParseExact(log4netSections[0], this.dateFormatString, CultureInfo.InvariantCulture, DateTimeStyles.None, out result);
+                if (isOK)
+                    columnContent[0] = result.ToString("dd.MM HH:mm:ss");
+                else
+                    columnContent[0] = "no date avail";
+
+                //Level
+                columnContent[1] = log4netSections[2];
+
+                //Logger (namespace)
+                int lastIdx = log4netSections[3].LastIndexOf(".");
+                if (lastIdx + 1 <= log4netSections[3].Length)
+                    columnContent[2] = log4netSections[3].Substring(lastIdx + 1);
+                else
+                    columnContent[2] = "no namespace found";
+
+                //
+                // extract process engine context out of message
+                // get proc eng context and split
                 // find first [ and next ] -> thats the proc eng context
                 // [RunTimeGuid:966728c2-c4b4; WODE:12dd; WOIN:12a; ActivityInstance:'n/a']
+                //
+                string wholeMessage = log4netSections[4];
                 int firstBracket = wholeMessage.IndexOf("[");
                 int lastBracket = wholeMessage.IndexOf("]");
 
-                if (firstBracket < 0)
-                    firstBracket = -1;
-                if (lastBracket < 0)
-                    lastBracket = wholeMessage.Length - 1;
+                try
+                {
+                    if (firstBracket < 0) firstBracket = -1;
+                    if (lastBracket < 0) lastBracket = wholeMessage.Length - 1;
+                    string procEngContext = wholeMessage.Substring(firstBracket + 1, lastBracket);
+                    string[] ctxSPlit = procEngContext.Split(splitStringContext, 4, StringSplitOptions.None);
 
+                    if (ctxSPlit.Length < 4)
+                    {
+                        // something wrong with format, just leave it
+                        columnContent[3] = "-"; columnContent[4] = "-"; columnContent[5] = "-";
+                    }
+                    else
+                    {
+                        columnContent[3] = ctxSPlit[1].Substring(ctxSPlit[1].IndexOf(":") + 1); // wode
+                        columnContent[4] = this.CutOffString(ctxSPlit[2],ctxSPlit[2].IndexOf(":") + 1, 12); // woin compact cut after 10
+                        columnContent[5] = ctxSPlit[3].Substring(ctxSPlit[3].IndexOf(":") + 1).Replace("'","").Replace("]","").Trim(); // instance
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(line + Environment.NewLine, ex);
+                    // something wrong with format, just leave it
+                    columnContent[3] = "-"; columnContent[4] = "-"; columnContent[5] = "-";
+                }
+
+                //
+                // get pure message
+                //
+                try
+                {
+                    string msgNoContext = wholeMessage.Substring(lastBracket + 1).Trim();
+                    if (msgNoContext.StartsWith(":")) msgNoContext = msgNoContext.Substring(1).Trim();
+                    if (msgNoContext.StartsWith(":")) msgNoContext = msgNoContext.Substring(1).Trim();
+                    columnContent[6] = msgNoContext;
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex);
+                    columnContent[6] = "error";
+                }
+            }
+            return columnContent;
+        }
+
+        private string CutOffString(string txt, int start, int length)
+        {
+            //columnContent[4] = ctxSPlit[2].Substring(ctxSPlit[2].IndexOf(":") + 1, 10); // woin compact cut after 10
+            int roomLeft = txt.Length - start;
+            if (length > roomLeft) length = roomLeft;
+            string result = txt.Substring(start, length);
+            return result;
+        }
+
+        private string[] DoDetailedColumnMode(string line)
+        {
+            string[] columnContent = new string[CONST_COLUMNCOUNT_Detailed];
+            // fist split line into || sections (the log4net columns)
+            string[] log4netSections = line.Split(splitString, 5, StringSplitOptions.None);
+
+            //in case its a multiline log move whole content to Message column
+            //there wont be 5 sections separated with ||
+            if (log4netSections.Length < 5)
+            {
+                columnContent[0] = "-"; columnContent[1] = "-"; columnContent[2] = "-"; columnContent[3] = "-"; columnContent[4] = "-"; columnContent[5] = "-";
+                columnContent[6] = line;
+            }
+            else
+            {
+                //
+                // set column values
+                //
+                columnContent[0] = log4netSections[0];                      //DateTime
+                columnContent[1] = log4netSections[1] + log4netSections[2]; //Thread&Level
+                columnContent[2] = log4netSections[3];                      //Logger
+
+                //
+                // extract process engine context out of message
+                // get proc eng context and split
+                // find first [ and next ] -> thats the proc eng context
+                // [RunTimeGuid:966728c2-c4b4; WODE:12dd; WOIN:12a; ActivityInstance:'n/a']
+                //
+                string wholeMessage = log4netSections[4];
+                int firstBracket = wholeMessage.IndexOf("[");
+                int lastBracket = wholeMessage.IndexOf("]");
+                if (firstBracket < 0) firstBracket = -1;
+                if (lastBracket < 0) lastBracket = wholeMessage.Length - 1;
                 string procEngContext = wholeMessage.Substring(firstBracket + 1, lastBracket);
+                string[] ctxSPlit = procEngContext.Split(splitStringContext, 4, StringSplitOptions.None);
+                if (ctxSPlit.Length < 4)
+                {
+                    // something wrong with format, just leave it
+                    columnContent[3] = procEngContext;
+                    columnContent[4] = "-"; columnContent[5] = "-"; columnContent[6] = "-";
+                }
+                else
+                {
+                    columnContent[3] = ctxSPlit[0].Substring(ctxSPlit[0].IndexOf(":") + 1);
+                    columnContent[4] = ctxSPlit[1].Substring(ctxSPlit[1].IndexOf(":") + 1);
+                    columnContent[5] = ctxSPlit[2].Substring(ctxSPlit[2].IndexOf(":") + 1);
+                    columnContent[6] = ctxSPlit[3].Substring(ctxSPlit[3].IndexOf(":") + 1);
+                }
+
+                //
+                // get pure message
+                //
                 string msgNoContext = wholeMessage.Substring(lastBracket + 1).Trim();
-
-                if (msgNoContext.StartsWith(":"))
-                    msgNoContext = msgNoContext.Substring(1).Trim();
-                if (msgNoContext.StartsWith(":"))
-                    msgNoContext = msgNoContext.Substring(1).Trim();
-
-
-                columnContent[0] = log4netSections[0];
-                columnContent[1] = log4netSections[1] + log4netSections[2];
-                columnContent[2] = log4netSections[3];
-                columnContent[3] = procEngContext;
-                columnContent[4] = msgNoContext;
+                if (msgNoContext.StartsWith(":")) msgNoContext = msgNoContext.Substring(1).Trim();
+                if (msgNoContext.StartsWith(":")) msgNoContext = msgNoContext.Substring(1).Trim();
+                columnContent[7] = msgNoContext;
             }
             return columnContent;
         }
@@ -154,11 +296,10 @@ namespace ProcessEngineColumnizer
         /// <returns></returns>
         public string PreProcessLine(string logLine, int lineNum, int realLineNum)
         {
-            _logger.Debug("in PreProcessLine, SearchPattern={0}", this.config.SearchPattern);
-            if (!string.IsNullOrWhiteSpace(this.config.SearchPattern))
+            if (!string.IsNullOrEmpty(this.config.SearchPattern))
             {
                 bool includeLine = this.parserLib.Parse(logLine);
-
+                _logger.Debug("includeLine:{0}; line={1}", includeLine.ToString(), logLine);
                 //_logger.Debug("logline called. lineNum:{0} ; realLineNum:{1}", lineNum, realLineNum);
 
                 if (includeLine)
@@ -167,30 +308,42 @@ namespace ProcessEngineColumnizer
                     return null;
             }
             else
+            {
+                _logger.Debug("ParLog not active (searchTerm empty)");
                 return logLine;
-           
+            }
         }
 
         public void Configure(ILogLineColumnizerCallback callback, string configDir)
         {
-            
+
             string configPath = configDir + configFileName;
+            _logger.Debug("in Configure(): configPath={0}", configPath);
             frmProcEngFilterSettings dlg = new frmProcEngFilterSettings(this.config);
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                BinaryFormatter formatter = new BinaryFormatter();
+                _logger.Debug("Configure Dlg mit OK. values are : {0}; {1}; {2}", this.config.StartPattern, this.config.SearchPattern, this.config.ShowCompactView.ToString()); BinaryFormatter formatter = new BinaryFormatter();
                 Stream fs = new FileStream(configPath, FileMode.Create, FileAccess.Write);
                 formatter.Serialize(fs, this.config);
                 fs.Close();
             }
+            else
+            {
+                _logger.Debug("Configure Dlg mit Cancel. values are : {0}; {1}; {2}", this.config.StartPattern, this.config.SearchPattern, this.config.ShowCompactView.ToString());
+            }
+
         }
 
         public void LoadConfig(string configDir)
         {
+
             string configPath = configDir + configFileName;
+
+            _logger.Debug("in LoadConfig(): configPath={0}", configPath);
 
             if (!File.Exists(configPath))
             {
+                _logger.Debug("new config file, using default values.");
                 this.config = new ProcessEngineColSettings();
                 this.config.InitDefaults();
             }
@@ -200,7 +353,8 @@ namespace ProcessEngineColumnizer
                 BinaryFormatter formatter = new BinaryFormatter();
                 try
                 {
-                    this.config = (ProcessEngineColSettings)formatter.Deserialize(fs);
+                    this.config = (ProcessEngineColSettings) formatter.Deserialize(fs);
+                    _logger.Debug("loaded existing config. values are : {0}; {1}; {2}", this.config.StartPattern, this.config.SearchPattern, this.config.ShowCompactView.ToString());
                 }
                 catch (SerializationException e)
                 {
@@ -215,7 +369,6 @@ namespace ProcessEngineColumnizer
                 }
             }
             this.parserLib = new ParLogLib(this.config.StartPattern, this.config.SearchPattern);
-            _logger.Debug("SearchPattern loaded:{0}", this.config.SearchPattern);
         }
     }
 }
