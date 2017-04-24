@@ -200,7 +200,7 @@ namespace ProcessEngineColumnizer
             if (log4netSections.Length < 5)
             {
                 columnContent[0] = "-"; columnContent[1] = "-"; columnContent[2] = "-"; columnContent[3] = "-"; columnContent[4] = "-"; columnContent[5] = "-";
-                columnContent[6] = line;
+                columnContent[6] = "-"; columnContent[7] = line;
             }
             else
             {
@@ -220,31 +220,44 @@ namespace ProcessEngineColumnizer
                 string wholeMessage = log4netSections[4];
                 int firstBracket = wholeMessage.IndexOf("[");
                 int lastBracket = wholeMessage.IndexOf("]");
-                if (firstBracket < 0) firstBracket = -1;
+				
+                if (firstBracket < 0) 
+				{ 
+					// not [ means no engine context
+					firstBracket = -1;
+				}
                 if (lastBracket < 0) lastBracket = wholeMessage.Length - 1;
                 string procEngContext = wholeMessage.Substring(firstBracket + 1, lastBracket);
-                string[] ctxSPlit = procEngContext.Split(splitStringContext, 4, StringSplitOptions.None);
-                if (ctxSPlit.Length < 4)
-                {
-                    // something wrong with format, just leave it
-                    columnContent[3] = procEngContext;
-                    columnContent[4] = "-"; columnContent[5] = "-"; columnContent[6] = "-";
-                }
-                else
-                {
-                    columnContent[3] = ctxSPlit[0].Substring(ctxSPlit[0].IndexOf(":") + 1);
-                    columnContent[4] = ctxSPlit[1].Substring(ctxSPlit[1].IndexOf(":") + 1);
-                    columnContent[5] = ctxSPlit[2].Substring(ctxSPlit[2].IndexOf(":") + 1);
-                    columnContent[6] = ctxSPlit[3].Substring(ctxSPlit[3].IndexOf(":") + 1);
-                }
-
-                //
-                // get pure message
-                //
-                string msgNoContext = wholeMessage.Substring(lastBracket + 1).Trim();
-                if (msgNoContext.StartsWith(":")) msgNoContext = msgNoContext.Substring(1).Trim();
-                if (msgNoContext.StartsWith(":")) msgNoContext = msgNoContext.Substring(1).Trim();
-                columnContent[7] = msgNoContext;
+				
+				if (firstBracket == -1)
+				{
+					 //there is no engine context
+					 columnContent[3] = "-"; columnContent[4] = "-"; columnContent[5] = "-"; columnContent[6] = "-"; columnContent[7] = wholeMessage;
+				}
+				else
+				{
+					string[] ctxSPlit = procEngContext.Split(splitStringContext, 4, StringSplitOptions.None);
+					if (ctxSPlit.Length < 4)
+					{
+						// something wrong with format, just leave it
+						columnContent[3] = "-"; columnContent[4] = "-"; columnContent[5] = "-"; columnContent[6] = "-"; columnContent[7] = wholeMessage;
+					}
+					else
+					{
+						columnContent[3] = ctxSPlit[0].Substring(ctxSPlit[0].IndexOf(":") + 1); // runtime
+						columnContent[4] = ctxSPlit[1].Substring(ctxSPlit[1].IndexOf(":") + 1); // wode
+						columnContent[5] = ctxSPlit[2].Substring(ctxSPlit[2].IndexOf(":") + 1); // woin
+						columnContent[6] = ctxSPlit[3].Substring(ctxSPlit[3].IndexOf(":") + 1); // activity
+						
+						//
+						// get pure message
+						//
+						string msgNoContext = wholeMessage.Substring(lastBracket + 1).Trim();
+						if (msgNoContext.StartsWith(":")) msgNoContext = msgNoContext.Substring(1).Trim();
+						if (msgNoContext.StartsWith(":")) msgNoContext = msgNoContext.Substring(1).Trim();
+						columnContent[7] = msgNoContext;
+					}					
+				}
             }
             return columnContent;
         }
