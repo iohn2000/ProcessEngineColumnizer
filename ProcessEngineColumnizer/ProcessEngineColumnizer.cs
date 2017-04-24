@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows.Forms;
+using System.Collections.Generic;
 
 namespace ProcessEngineColumnizer
 {
@@ -42,6 +43,7 @@ namespace ProcessEngineColumnizer
             this.config = new ProcessEngineColSettings();
         }
 
+        #region columnizer
         public int GetColumnCount()
         {
             if (this.config.ShowCompactView)
@@ -296,6 +298,7 @@ namespace ProcessEngineColumnizer
         {
             throw new NotImplementedException();
         }
+        #endregion
 
         /// <summary>
         /// The Columnizer should always be consistent in the way which lines will be dropped. 
@@ -327,6 +330,7 @@ namespace ProcessEngineColumnizer
             }
         }
 
+        #region Columnizer Config Dlg
         public void Configure(ILogLineColumnizerCallback callback, string configDir)
         {
 
@@ -383,5 +387,7 @@ namespace ProcessEngineColumnizer
             }
             this.parserLib = new ParLogLib(this.config.StartPattern, this.config.SearchPattern);
         }
+        #endregion
+
     }
 }
