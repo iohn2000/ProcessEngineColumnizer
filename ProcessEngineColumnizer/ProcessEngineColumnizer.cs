@@ -23,7 +23,6 @@ namespace ProcessEngineColumnizer
     ///  <item name = "taskGUID" value="TAIT_f4e72ab3625b4342b0461f0d7972ed05" />
     /// </root>
     /// 13 Apr 2017 06:02:46,086||[ServerScheduler_Worker-4]||INFO ||Kapsch.IS.ProcessEngine.Runtime||[RunTimeGuid:03da999b-da87-4c97-829a-8905841a48cc; WODE:; WOIN:WOIN_5dfcac9f2cdd45cf9420c0013f3394b8; ActivityInstance:'n/a']: Working on TopEngineAlert: (WFEEngineAlert): 2493 - 3/31/2017 2:07:26 PM - Polling
-
     /// ]]>
     /// </summary>
     public class ProcessEngineColumnizer : ILogLineColumnizer, IPreProcessColumnizer, IColumnizerConfigurator
@@ -106,26 +105,23 @@ namespace ProcessEngineColumnizer
             }
             else
             {
-                // set column values
-
                 // compact date
-                DateTime result;
-
-                var isOK = DateTime.TryParseExact(log4netSections[0], this.dateFormatString, CultureInfo.InvariantCulture, DateTimeStyles.None, out result);
+                DateTime logDate;
+                var isOK = DateTime.TryParseExact(log4netSections[0], this.dateFormatString, CultureInfo.InvariantCulture, DateTimeStyles.None, out logDate);
                 if (isOK)
-                    columnContent[0] = result.ToString("dd.MM HH:mm:ss");
+                    columnContent[0] = logDate.ToString("dd.MM HH:mm:ss");
                 else
                     columnContent[0] = "no date avail";
 
                 //Level
-                columnContent[1] = log4netSections[2];
+                columnContent[1] = "||" + log4netSections[2];
 
                 //Logger (namespace)
                 int lastIdx = log4netSections[3].LastIndexOf(".");
                 if (lastIdx + 1 <= log4netSections[3].Length)
                     columnContent[2] = log4netSections[3].Substring(lastIdx + 1);
                 else
-                    columnContent[2] = "no namespace found";
+                    columnContent[2] = "no namespace";
 
                 //
                 // extract process engine context out of message
@@ -139,7 +135,6 @@ namespace ProcessEngineColumnizer
 
                 try
                 {
-                    if (firstBracket < 0) firstBracket = -1;
                     if (lastBracket < 0) lastBracket = wholeMessage.Length - 1;
                     string procEngContext = wholeMessage.Substring(firstBracket + 1, lastBracket);
                     string[] ctxSPlit = procEngContext.Split(splitStringContext, 4, StringSplitOptions.None);
@@ -148,12 +143,28 @@ namespace ProcessEngineColumnizer
                     {
                         // something wrong with format, just leave it
                         columnContent[3] = "-"; columnContent[4] = "-"; columnContent[5] = "-";
+                        columnContent[6] = wholeMessage;
                     }
                     else
                     {
                         columnContent[3] = ctxSPlit[1].Substring(ctxSPlit[1].IndexOf(":") + 1); // wode
-                        columnContent[4] = this.CutOffString(ctxSPlit[2],ctxSPlit[2].IndexOf(":") + 1, 12); // woin compact cut after 10
-                        columnContent[5] = ctxSPlit[3].Substring(ctxSPlit[3].IndexOf(":") + 1).Replace("'","").Replace("]","").Trim(); // instance
+                        columnContent[4] = this.CutOffString(ctxSPlit[2], ctxSPlit[2].IndexOf(":") + 1, 12); // woin compact cut after 10
+                        columnContent[5] = ctxSPlit[3].Substring(ctxSPlit[3].IndexOf(":") + 1).Replace("'", "").Replace("]", "").Trim(); // instance
+                        //
+                        // get pure message
+                        //
+                        try
+                        {
+                            string msgNoContext = wholeMessage.Substring(lastBracket + 1).Trim();
+                            if (msgNoContext.StartsWith(":")) msgNoContext = msgNoContext.Substring(1).Trim();
+                            if (msgNoContext.StartsWith(":")) msgNoContext = msgNoContext.Substring(1).Trim();
+                            columnContent[6] = msgNoContext;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.Error(ex);
+                            columnContent[6] = "error";
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -161,22 +172,7 @@ namespace ProcessEngineColumnizer
                     _logger.Error(line + Environment.NewLine, ex);
                     // something wrong with format, just leave it
                     columnContent[3] = "-"; columnContent[4] = "-"; columnContent[5] = "-";
-                }
-
-                //
-                // get pure message
-                //
-                try
-                {
-                    string msgNoContext = wholeMessage.Substring(lastBracket + 1).Trim();
-                    if (msgNoContext.StartsWith(":")) msgNoContext = msgNoContext.Substring(1).Trim();
-                    if (msgNoContext.StartsWith(":")) msgNoContext = msgNoContext.Substring(1).Trim();
-                    columnContent[6] = msgNoContext;
-                }
-                catch (Exception ex)
-                {
-                    _logger.Error(ex);
-                    columnContent[6] = "error";
+                    columnContent[6] = wholeMessage;
                 }
             }
             return columnContent;
@@ -209,9 +205,9 @@ namespace ProcessEngineColumnizer
                 //
                 // set column values
                 //
-                columnContent[0] = log4netSections[0];                      //DateTime
-                columnContent[1] = log4netSections[1] + log4netSections[2]; //Thread&Level
-                columnContent[2] = log4netSections[3];                      //Logger
+                columnContent[0] = log4netSections[0];                             //DateTime
+                columnContent[1] = log4netSections[1] + "||" + log4netSections[2]; //Thread&Level
+                columnContent[2] = log4netSections[3];                             //Logger
 
                 //
                 // extract process engine context out of message
@@ -222,44 +218,41 @@ namespace ProcessEngineColumnizer
                 string wholeMessage = log4netSections[4];
                 int firstBracket = wholeMessage.IndexOf("[");
                 int lastBracket = wholeMessage.IndexOf("]");
-				
-                if (firstBracket < 0) 
-				{ 
-					// not [ means no engine context
-					firstBracket = -1;
-				}
+
                 if (lastBracket < 0) lastBracket = wholeMessage.Length - 1;
                 string procEngContext = wholeMessage.Substring(firstBracket + 1, lastBracket);
-				
-				if (firstBracket == -1)
-				{
-					 //there is no engine context
-					 columnContent[3] = "-"; columnContent[4] = "-"; columnContent[5] = "-"; columnContent[6] = "-"; columnContent[7] = wholeMessage;
-				}
-				else
-				{
-					string[] ctxSPlit = procEngContext.Split(splitStringContext, 4, StringSplitOptions.None);
-					if (ctxSPlit.Length < 4)
-					{
-						// something wrong with format, just leave it
-						columnContent[3] = "-"; columnContent[4] = "-"; columnContent[5] = "-"; columnContent[6] = "-"; columnContent[7] = wholeMessage;
-					}
-					else
-					{
-						columnContent[3] = ctxSPlit[0].Substring(ctxSPlit[0].IndexOf(":") + 1); // runtime
-						columnContent[4] = ctxSPlit[1].Substring(ctxSPlit[1].IndexOf(":") + 1); // wode
-						columnContent[5] = ctxSPlit[2].Substring(ctxSPlit[2].IndexOf(":") + 1); // woin
-						columnContent[6] = ctxSPlit[3].Substring(ctxSPlit[3].IndexOf(":") + 1); // activity
-						
-						//
-						// get pure message
-						//
-						string msgNoContext = wholeMessage.Substring(lastBracket + 1).Trim();
-						if (msgNoContext.StartsWith(":")) msgNoContext = msgNoContext.Substring(1).Trim();
-						if (msgNoContext.StartsWith(":")) msgNoContext = msgNoContext.Substring(1).Trim();
-						columnContent[7] = msgNoContext;
-					}					
-				}
+
+                if (firstBracket == -1)
+                {
+                    //there is no engine context
+                    columnContent[3] = "-"; columnContent[4] = "-"; columnContent[5] = "-"; columnContent[6] = "-";
+                    columnContent[7] = wholeMessage;
+                }
+                else
+                {
+                    string[] ctxSPlit = procEngContext.Split(splitStringContext, 4, StringSplitOptions.None);
+                    if (ctxSPlit.Length < 4)
+                    {
+                        // something wrong with format, just leave it
+                        columnContent[3] = "-"; columnContent[4] = "-"; columnContent[5] = "-"; columnContent[6] = "-";
+                        columnContent[7] = wholeMessage;
+                    }
+                    else
+                    {
+                        columnContent[3] = ctxSPlit[0].Substring(ctxSPlit[0].IndexOf(":") + 1); // runtime
+                        columnContent[4] = ctxSPlit[1].Substring(ctxSPlit[1].IndexOf(":") + 1); // wode
+                        columnContent[5] = ctxSPlit[2].Substring(ctxSPlit[2].IndexOf(":") + 1); // woin
+                        columnContent[6] = ctxSPlit[3].Substring(ctxSPlit[3].IndexOf(":") + 1); // activity
+
+                        //
+                        // get pure message
+                        //
+                        string msgNoContext = wholeMessage.Substring(lastBracket + 1).Trim();
+                        if (msgNoContext.StartsWith(":")) msgNoContext = msgNoContext.Substring(1).Trim();
+                        if (msgNoContext.StartsWith(":")) msgNoContext = msgNoContext.Substring(1).Trim();
+                        columnContent[7] = msgNoContext;
+                    }
+                }
             }
             return columnContent;
         }
@@ -370,7 +363,7 @@ namespace ProcessEngineColumnizer
                 BinaryFormatter formatter = new BinaryFormatter();
                 try
                 {
-                    this.config = (ProcessEngineColSettings) formatter.Deserialize(fs);
+                    this.config = (ProcessEngineColSettings)formatter.Deserialize(fs);
                     _logger.Debug("loaded existing config. values are : {0}; {1}; {2}", this.config.StartPattern, this.config.SearchPattern, this.config.ShowCompactView.ToString());
                 }
                 catch (SerializationException e)
